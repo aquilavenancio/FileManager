@@ -1,109 +1,144 @@
 package com.aquila.filemanager;
 
-import java.io.BufferedReader;
+import com.aquila.filemanager.service.ManagerFilePropertie;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import javafx.application.Application;
+import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-
 /**
  * JavaFX App
  */
-public class App extends Application {
+public class App extends Application implements EventHandler{
 
-    private List<String> uniqueLines = new ArrayList<>();
+    private TextArea fileOriginal;
+    private TextArea fileExposes;
+    private FileChooser fileChooser;
+    private Button selectedButtonFile;
+    private Button exit;
     
-    @Override
-    public void start(Stage stage) {
-        var javaVersion = SystemInfo.javaVersion();
-        var javafxVersion = SystemInfo.javafxVersion();
+    ManagerFilePropertie manager ;
+    private void inicialize(Stage stage) {
+        setFileChooser(new FileChooser());
+        setFileOriginal(new TextArea());
+        setFileExposes(new TextArea());
+        setSelectedButtonFile(new Button("Select File"));
+        setExit(new Button("Sair"));
         
-        // Cria uma janela para selecionar o arquivo properties
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Selecionar arquivo properties");
-        fileChooser.getExtensionFilters().addAll(
+        
+        manager = new ManagerFilePropertie();
+        
+        getExit().setOnAction(e -> {
+            System.exit(0);
+        });
+        getSelectedButtonFile().setOnAction(this);
+        //Inicializando o chooser
+        getFileChooser().setTitle("Selecionar arquivo properties");
+        getFileChooser().getExtensionFilters().addAll(
             new FileChooser.ExtensionFilter("Arquivos Properties", "*.properties"),
             new FileChooser.ExtensionFilter("Todos os arquivos", "*.*"));
-        File file = fileChooser.showOpenDialog(stage);
         
-        if (file != null) {
-            // Lê as linhas do arquivo properties
-            Properties properties = new Properties();
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                properties.load(reader);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-            
-            // Lê as linhas do arquivo properties e adiciona as linhas únicas ao objeto HashSet
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if (!uniqueLines.contains(line)) {
-                        uniqueLines.add(line);
-                    }
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-
-            // Cria um campo de texto para exibir as linhas do arquivo, pintando as linhas duplicadas de vermelho
-            TextArea textArea = new TextArea();
-            for (String line : uniqueLines) {
-                Text text = new Text(line + "\n");
-                if (lineHasDuplicates(line)) {
-                    text.setFill(Color.RED);
-                }
-                textArea.appendText(text.getText());
-            }
-            textArea.setEditable(false);
-
-            // Cria uma caixa de texto para exibir as linhas do arquivo
-            TextArea textAreaOriginalFile = new TextArea();
-            textAreaOriginalFile.setEditable(false);
-            textAreaOriginalFile.setText(properties.toString());
-
-            // Cria uma cena com a caixa de texto e a exibe na janela principal
-            VBox root = new VBox();
-            root.setPadding(new Insets(10));
-            root.setAlignment(Pos.CENTER);
-            root.getChildren().addAll(new Label("Conteúdo do arquivo: " + file.getName()), textAreaOriginalFile);
-            root.getChildren().addAll(new Label("Texto duplicados"), textArea);
-            var scene = new Scene(root, 640, 480);
-
-            stage.setScene(scene);
-            stage.show();
-
-        }
         
+        VBox root = new VBox();
+        var hBoxButton = new HBox(this.getSelectedButtonFile(), this.getExit());
+        hBoxButton.setPadding(new Insets(5, 5 ,5,5));
+        root.setPadding(new Insets(10));
+        root.setAlignment(Pos.CENTER);
+        root.getChildren().addAll(new Label("Selecione arquivos para retirar duplicados"),hBoxButton
+                ,this.getFileOriginal(), new Label("Arquivo sem duplicacoes "), this.getFileExposes());
+        var scene = new Scene(root, 1024, 720);
+
+        stage.setTitle("| 1.0V | - File Manager");
+        stage.setScene(scene);
+        stage.show();
+
     }
-    
-    private boolean lineHasDuplicates(String line) {
-        int count = 0;
-        for (String s : uniqueLines) {
-            if (s.equals(line)) {
-                count++;
-            }
-        }
-        return count > 1;
+
+    @Override
+    public void start(Stage stage) {
+        this.inicialize(stage);
+        
     }
 
     public static void main(String[] args) {
         launch();
     }
+    
+    public FileChooser getFileChooser(){
+        return this.fileChooser;
+    }
+    
+    public void setFileChooser(FileChooser fileChooser){
+        this.fileChooser = fileChooser;
+    }
+    
+    public TextArea getFileOriginal(){
+        return this.fileOriginal;
+    }
+    
+    public void setFileOriginal(TextArea fileOriginal){
+        this.fileOriginal = fileOriginal;
+    }
+    
+    public void setSelectedButtonFile(Button selectedButton){
+        this.selectedButtonFile = selectedButton;
+    }
+    
+    public Button getSelectedButtonFile(){
+        return this.selectedButtonFile;
+    }
+    
+    public TextArea getFileExposes(){
+        return this.fileExposes;
+    }
+    
+    public void setFileExposes(TextArea fileExposes){
+        this.fileExposes = fileExposes;
+    }
 
+    public Button getExit() {
+        return exit;
+    }
+
+    public void setExit(Button exit) {
+        this.exit = exit;
+    }
+    
+    
+
+    @Override
+    public void handle(Event t) {
+       Stage stage = new Stage();
+       File file = fileChooser.showOpenDialog(stage);
+        if (file != null) {
+            List<String> lines = manager.lineListFile(file);
+            lines.stream().forEach(line-> {
+                Text text = new Text(line + "\n");
+                System.out.print(text.getText());
+                System.out.print(line);
+                getFileOriginal().appendText(text.getText());
+            
+            });
+            
+            List<String> linedList = manager.linedListFile(file);
+            linedList.stream().forEach(line -> {
+                Text text = new Text(line + "\n");
+                System.out.print(text.getText());
+                System.out.print(line);
+                getFileExposes().appendText(text.getText());
+            });
+        }
+    }
 }
